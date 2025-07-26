@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl transition-colors duration-200">
               <span className="block">Democratizing</span>
               <span className="block text-gradient-primary">Stock Analysis</span>
               <span className="block">for Retail Investors</span>
             </h1>
-            <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-500">
+            <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-300 transition-colors duration-200">
               Advanced stock screening, portfolio management, and real-time analytics 
               designed specifically for Indian markets. Make informed investment decisions 
               with institutional-grade tools.
@@ -48,13 +48,13 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-800 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              Everything you need to analyze stocks
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
+                          <h2 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl transition-colors duration-200">
+                Everything you need to analyze stocks
+              </h2>
+              <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 transition-colors duration-200">
               Professional-grade tools designed for the Indian stock market
             </p>
           </div>
