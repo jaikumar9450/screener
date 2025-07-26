@@ -1,0 +1,451 @@
+// Prisma Schema for StockFilter Pro
+// Database: PostgreSQL with optimized indexes and relationships
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// USER MANAGEMENT MODELS
+// ========================================
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  firstName        String?
+  lastName         String?
+  phone            String?
+  isVerified       Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  subscriptionTier String    @default("free")
+  preferences      Json      @default("{}")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lastLogin        DateTime?
+  loginCount       Int       @default(0)
+
+  // Relationships
+  sessions             UserSession[]
+  emailVerifications   EmailVerification[]
+  watchlists           Watchlist[]
+  portfolios           Portfolio[]
+  savedScreens         SavedScreen[]
+  screenResults        ScreenResult[]
+  userActivities       UserActivity[]
+  exportRequests       ExportRequest[]
+  notifications        Notification[]
+  passwordResetTokens  PasswordResetToken[]
+
+  @@map("users")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// ========================================
+// STOCK MASTER DATA MODELS
+// ========================================
+
+model Company {
+  id                String    @id @default(cuid())
+  symbol            String    @unique
+  companyName       String
+  sector            String?
+  industry          String?
+  subIndustry       String?
+  marketCap         BigInt?
+  listingDate       DateTime?
+  isinCode          String?   @unique
+  exchange          String
+  faceValue         Decimal?
+  isActive          Boolean   @default(true)
+  companyDescription String?
+  website           String?
+  headquarters      String?
+  employeeCount     Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  stockPrices          StockPrice[]
+  financialStatements  FinancialStatement[]
+  financialRatios      FinancialRatio[]
+  marketMetrics        MarketMetrics[]
+  watchlistStocks      WatchlistStock[]
+  portfolioTransactions PortfolioTransaction[]
+
+  @@index([symbol])
+  @@index([sector, industry])
+  @@index([marketCap(sort: Desc)])
+  @@index([listingDate])
+  @@map("companies")
+}
+
+model StockPrice {
+  id                  String   @id @default(cuid())
+  companyId          String
+  tradeDate          DateTime
+  openPrice          Decimal?
+  highPrice          Decimal?
+  lowPrice           Decimal?
+  closePrice         Decimal
+  volume             BigInt?
+  turnover           BigInt?
+  deliveryQty        BigInt?
+  deliveryPercentage Decimal?
+  adjustedPrice      Decimal?
+  createdAt          DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, tradeDate])
+  @@index([companyId, tradeDate(sort: Desc)])
+  @@index([tradeDate(sort: Desc), volume(sort: Desc)])
+  @@index([closePrice, tradeDate(sort: Desc)])
+  @@map("stock_prices")
+}
+
+// ========================================
+// FINANCIAL DATA MODELS
+// ========================================
+
+model FinancialStatement {
+  id             String   @id @default(cuid())
+  companyId      String
+  statementType  String   // 'income', 'balance', 'cashflow'
+  periodType     String   // 'annual', 'quarterly'
+  fiscalYear     Int
+  fiscalQuarter  Int?     // 1,2,3,4 for quarterly, NULL for annual
+  periodEndDate  DateTime
+  filingDate     DateTime?
+  statementData  Json
+  ratiosCalculated Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, statementType, periodType, fiscalYear, fiscalQuarter])
+  @@map("financial_statements")
+}
+
+model FinancialRatio {
+  id                    String   @id @default(cuid())
+  companyId            String
+  periodType           String   // 'annual', 'quarterly'
+  fiscalYear           Int
+  fiscalQuarter        Int?
+  periodEndDate        DateTime
+
+  // Valuation Ratios
+  peRatio              Decimal?
+  pbRatio              Decimal?
+  psRatio              Decimal?
+  evEbitda             Decimal?
+  evSales              Decimal?
+  pcfRatio             Decimal?
+  dividendYield        Decimal?
+  pegRatio             Decimal?
+
+  // Profitability Ratios
+  roe                  Decimal?
+  roa                  Decimal?
+  roic                 Decimal?
+  roce                 Decimal?
+  netMargin            Decimal?
+  grossMargin          Decimal?
+  operatingMargin      Decimal?
+  ebitdaMargin         Decimal?
+
+  // Liquidity Ratios
+  currentRatio         Decimal?
+  quickRatio           Decimal?
+  cashRatio            Decimal?
+  workingCapital       BigInt?
+
+  // Leverage Ratios
+  debtToEquity         Decimal?
+  debtToAssets         Decimal?
+  interestCoverage     Decimal?
+  debtServiceCoverage  Decimal?
+
+  // Efficiency Ratios
+  assetTurnover        Decimal?
+  inventoryTurnover    Decimal?
+  receivablesTurnover  Decimal?
+
+  // Growth Rates (YoY)
+  revenueGrowth        Decimal?
+  profitGrowth         Decimal?
+  epsGrowth            Decimal?
+  dividendGrowth       Decimal?
+  bookValueGrowth      Decimal?
+
+  calculatedAt         DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, periodType, fiscalYear, fiscalQuarter])
+  @@index([peRatio, pbRatio, roe, debtToEquity])
+  @@index([peRatio, pbRatio, psRatio, evEbitda])
+  @@index([revenueGrowth, profitGrowth, epsGrowth])
+  @@index([companyId, fiscalYear(sort: Desc), fiscalQuarter(sort: Desc)])
+  @@map("financial_ratios")
+}
+
+model MarketMetrics {
+  id              String   @id @default(cuid())
+  companyId       String
+  asOfDate        DateTime
+  currentPrice    Decimal?
+  marketCap       BigInt?
+  enterpriseValue BigInt?
+  sharesOutstanding BigInt?
+  freeFloat       BigInt?
+  week52High      Decimal?
+  week52Low       Decimal?
+  week52HighDate  DateTime?
+  week52LowDate   DateTime?
+  avgVolume10d    BigInt?
+  avgVolume30d    BigInt?
+  beta            Decimal?
+  volatility30d   Decimal?
+  updatedAt       DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, asOfDate])
+  @@index([companyId, asOfDate(sort: Desc)])
+  @@index([marketCap(sort: Desc), asOfDate(sort: Desc)])
+  @@index([week52High, week52Low, asOfDate(sort: Desc)])
+  @@map("market_metrics")
+}
+
+// ========================================
+// USER ACTIVITY MODELS
+// ========================================
+
+model Watchlist {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String   @default("#007bff")
+  isDefault   Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stocks WatchlistStock[]
+
+  @@map("watchlists")
+}
+
+model WatchlistStock {
+  id           String   @id @default(cuid())
+  watchlistId  String
+  companyId    String
+  addedAt      DateTime @default(now())
+  notes        String?
+  targetPrice  Decimal?
+  stopLoss     Decimal?
+  positionSize Decimal? // Percentage of portfolio
+
+  watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, companyId])
+  @@map("watchlist_stocks")
+}
+
+model Portfolio {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  description  String?
+  portfolioType String  @default("equity") // 'equity', 'demo', 'mutual_fund'
+  baseCurrency String   @default("INR")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PortfolioTransaction[]
+
+  @@map("portfolios")
+}
+
+model PortfolioTransaction {
+  id              String   @id @default(cuid())
+  portfolioId     String
+  companyId       String
+  transactionType String   // 'buy', 'sell', 'dividend', 'bonus', 'split'
+  quantity        Int
+  price           Decimal
+  transactionDate DateTime
+  brokerage       Decimal  @default(0)
+  taxes           Decimal  @default(0)
+  otherCharges    Decimal  @default(0)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId, transactionDate(sort: Desc)])
+  @@map("portfolio_transactions")
+}
+
+// ========================================
+// SCREENING & ANALYTICS MODELS
+// ========================================
+
+model SavedScreen {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  description    String?
+  filterCriteria Json
+  isPublic       Boolean  @default(false)
+  isTemplate     Boolean  @default(false)
+  category       String?  // 'value', 'growth', 'dividend', 'custom'
+  usageCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastRun        DateTime?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  screenResults ScreenResult[]
+
+  @@index([userId, isPublic])
+  @@map("saved_screens")
+}
+
+model ScreenResult {
+  id              String   @id @default(cuid())
+  screenId        String
+  userId          String
+  companiesFound  Int
+  resultsData     Json     // Cached screening results
+  executionTimeMs Int
+  createdAt       DateTime @default(now())
+
+  savedScreen SavedScreen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([screenId, createdAt(sort: Desc)])
+  @@map("screen_results")
+}
+
+// ========================================
+// SYSTEM & ANALYTICS MODELS
+// ========================================
+
+model UserActivity {
+  id           String   @id @default(cuid())
+  userId       String
+  activityType String
+  activityData Json?
+  ipAddress    String?
+  userAgent    String?
+  sessionId    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([activityType, createdAt(sort: Desc)])
+  @@map("user_activities")
+}
+
+model ExportRequest {
+  id            String    @id @default(cuid())
+  userId        String
+  exportType    String    // 'screening', 'portfolio', 'watchlist', 'company'
+  exportFormat  String    // 'csv', 'excel', 'pdf'
+  filePath      String?
+  status        String    @default("pending") // 'pending', 'processing', 'completed', 'failed'
+  rowCount      Int?
+  fileSize      BigInt?
+  downloadCount Int       @default(0)
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("export_requests")
+}
+
+model SystemConfig {
+  configKey    String   @id
+  configValue  Json
+  description  String?
+  isEncrypted  Boolean  @default(false)
+  updatedBy    String?
+  updatedAt    DateTime @default(now())
+
+  @@map("system_config")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String    // 'price_alert', 'news', 'system', 'portfolio'
+  title     String
+  message   String
+  isRead    Boolean   @default(false)
+  priority  String    @default("normal") // 'low', 'normal', 'high', 'urgent'
+  actionUrl String?
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}

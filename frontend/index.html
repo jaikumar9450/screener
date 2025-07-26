@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>StockFilter Pro - Advanced Stock Screening Platform</title>
+    <meta name="description" content="Powerful stock screening and portfolio management platform for Indian markets. Filter stocks using 25+ financial metrics, track portfolios, and make informed investment decisions." />
+    <meta name="keywords" content="stock screening, portfolio management, Indian stocks, NSE, BSE, financial analysis, investment tools" />
+    <meta name="author" content="StockFilter Pro Team" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://stockfilterpro.com" />
+    <meta property="og:title" content="StockFilter Pro - Advanced Stock Screening Platform" />
+    <meta property="og:description" content="Powerful stock screening and portfolio management platform for Indian markets." />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://stockfilterpro.com" />
+    <meta property="twitter:title" content="StockFilter Pro - Advanced Stock Screening Platform" />
+    <meta property="twitter:description" content="Powerful stock screening and portfolio management platform for Indian markets." />
+    <meta property="twitter:image" content="/og-image.png" />
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="msapplication-TileColor" content="#1f2937" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" /></noscript>
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    
+    <!-- Performance Optimization -->
+    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "StockFilter Pro",
+      "description": "Advanced Stock Screening Platform for Indian Markets",
+      "url": "https://stockfilterpro.com",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "StockFilter Pro Team"
+      }
+    }
+    </script>
+    
+    <!-- Critical CSS will be injected here by Vite -->
+  </head>
+  <body class="font-sans antialiased bg-white text-gray-900">
+    <noscript>
+      <div style="text-align: center; padding: 2rem; background: #fee2e2; color: #dc2626; font-family: sans-serif;">
+        <h2>JavaScript Required</h2>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser and reload the page.</p>
+      </div>
+    </noscript>
+    
+    <!-- App Root -->
+    <div id="root"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+      <div style="text-align: center;">
+        <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+        <p style="color: #6b7280; font-size: 14px;">Loading StockFilter Pro...</p>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Hide loading screen once app loads */
+      .loaded #loading-screen {
+        display: none !important;
+      }
+    </style>
+    
+    <script>
+      // Hide loading screen once app starts
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          document.documentElement.classList.add('loaded');
+        }, 100);
+      });
+      
+      // Service Worker Registration (if PWA is enabled)
+      if ('serviceWorker' in navigator && import.meta.env.PROD) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    
+    <!-- Module Script -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
